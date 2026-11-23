@@ -1,0 +1,421 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // =========================================================================
+    // HARDENED GLOBAL PRIMITIVES
+    // =========================================================================
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isBootstrappedAdmin() {
+      return isEmailVerified() && request.auth.token.email == 'ajigamaliel30@gmail.com';
+    }
+
+    function userRolePath(uid) {
+      return /databases/$(database)/documents/userRoles/$(uid);
+    }
+
+    function hasUserRoleDoc() {
+      return isSignedIn() && exists(userRolePath(request.auth.uid));
+    }
+
+    function currentUserRoleData() {
+      return get(userRolePath(request.auth.uid)).data;
+    }
+
+    function isVerifiedUser() {
+      return isEmailVerified() && (
+        isBootstrappedAdmin() ||
+        (hasUserRoleDoc() && currentUserRoleData().status == 'Verified')
+      );
+    }
+
+    function isAdmin() {
+      return isEmailVerified() && (
+        isBootstrappedAdmin() ||
+        (hasUserRoleDoc() && currentUserRoleData().status == 'Verified' && currentUserRoleData().isAdmin == true)
+      );
+    }
+
+    function isCommandRole() {
+      return isVerifiedUser() && (
+        isBootstrappedAdmin() ||
+        (hasUserRoleDoc() && currentUserRoleData().commandRole in ['CO', 'GOO', 'Comd'])
+      );
+    }
+
+    function roleRank(role) {
+      return role == 'Comd' ? 3 : (role == 'GOO' ? 2 : (role == 'CO' ? 1 : 0));
+    }
+
+    function actorCommandRole() {
+      return hasUserRoleDoc() ? currentUserRoleData().commandRole : (isBootstrappedAdmin() ? 'Comd' : 'Pilot');
+    }
+
+    function actorCommandRank() {
+      return roleRank(actorCommandRole());
+    }
+
+    function expectedRiskLevel(score) {
+      return score <= 5 ? 'LOW' : (score <= 12 ? 'MODERATE' : (score <= 15 ? 'HIGH' : 'SEVERE'));
+    }
+
+    function expectedBaseMda(score) {
+      return score <= 5 ? 'Pilot' : (score <= 12 ? 'CO' : (score <= 15 ? 'GOO' : 'Comd'));
+    }
+
+    function expectedRequiredMda(score, pilotRole) {
+      return score <= 5 ? 'Pilot'
+        : (score <= 12
+            ? (pilotRole == 'Pilot' ? 'CO' : (pilotRole == 'CO' ? 'GOO' : 'Comd'))
+            : (score <= 15
+                ? (pilotRole in ['Pilot', 'CO'] ? 'GOO' : 'Comd')
+                : 'Comd'));
+    }
+
+    function expectedInitialStatus(reqMda) {
+      return reqMda == 'Pilot' ? 'CLEARED'
+        : (reqMda == 'CO' ? 'PENDING CO SIGN-OFF'
+          : (reqMda == 'GOO' ? 'PENDING GOO SIGN-OFF' : 'PENDING COMD SIGN-OFF'));
+    }
+
+    // =========================================================================
+    // VALIDATION BLUEPRINTS (ANTI-UPDATE-GAP)
+    // =========================================================================
+
+    function isValidUserRole(data) {
+      return data.keys().hasAll([
+          'uid', 'displayName', 'rankCallsign', 'commandRole', 'status', 'isAdmin', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid', 'displayName', 'rankCallsign', 'commandRole', 'status', 'isAdmin', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.uid)
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100
+        && data.rankCallsign is string && data.rankCallsign.size() >= 1 && data.rankCallsign.size() <= 60
+        && data.commandRole in ['Pilot', 'CO', 'GOO', 'Comd']
+        && data.status in ['Pending', 'Verified', 'Suspended']
+        && data.isAdmin is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidUserPrivateInfo(data) {
+      return data.keys().hasAll(['uid', 'email', 'notificationsEnabled', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'fcmToken', 'notificationsEnabled', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 160
+        && (!('fcmToken' in data) || (data.fcmToken is string && data.fcmToken.size() <= 512))
+        && data.notificationsEnabled is bool
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidOrmSubmission(data) {
+      return data.keys().hasAll([
+          'id', 'pilotId', 'pilotName', 'rankCallsign', 'pilotRole', 'sortieDate',
+          'aircraftTail', 'missionCallsign', 'itemizedBreakdown', 'totalScore',
+          'riskLevel', 'baseMdaRole', 'requiredMdaRole', 'escalated', 'topRiskDrivers',
+          'mitigationNotes', 'status', 'decisionByUid', 'decisionByName',
+          'decisionByRole', 'commandRemarks', 'submittedAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'pilotId', 'pilotName', 'rankCallsign', 'pilotRole', 'sortieDate',
+          'aircraftTail', 'missionCallsign', 'itemizedBreakdown', 'totalScore',
+          'riskLevel', 'baseMdaRole', 'requiredMdaRole', 'escalated', 'topRiskDrivers',
+          'mitigationNotes', 'status', 'decisionByUid', 'decisionByName',
+          'decisionByRole', 'commandRemarks', 'submittedAt', 'decidedAt', 'updatedAt'
+        ])
+        && isValidId(data.id)
+        && isValidId(data.pilotId)
+        && data.pilotName is string && data.pilotName.size() >= 1 && data.pilotName.size() <= 100
+        && data.rankCallsign is string && data.rankCallsign.size() >= 1 && data.rankCallsign.size() <= 60
+        && data.pilotRole in ['Pilot', 'CO', 'GOO', 'Comd']
+        && data.sortieDate is string && data.sortieDate.size() == 10 && data.sortieDate.matches('^\\d{4}-\\d{2}-\\d{2}$')
+        && data.aircraftTail is string && data.aircraftTail.size() >= 1 && data.aircraftTail.size() <= 40
+        && data.missionCallsign is string && data.missionCallsign.size() >= 1 && data.missionCallsign.size() <= 40
+        && data.itemizedBreakdown is list && data.itemizedBreakdown.size() == 16 && data.itemizedBreakdown[0] is map
+        && data.totalScore is number && data.totalScore >= 0 && data.totalScore <= 100
+        && data.riskLevel in ['LOW', 'MODERATE', 'HIGH', 'SEVERE']
+        && data.baseMdaRole in ['Pilot', 'CO', 'GOO', 'Comd']
+        && data.requiredMdaRole in ['Pilot', 'CO', 'GOO', 'Comd']
+        && data.escalated is bool
+        && data.topRiskDrivers is list && data.topRiskDrivers.size() <= 5
+        && (data.topRiskDrivers.size() == 0 || data.topRiskDrivers[0] is string)
+        && data.mitigationNotes is string && data.mitigationNotes.size() <= 2000
+        && (data.totalScore < 6 || data.mitigationNotes.size() >= 1)
+        && data.status in [
+          'CLEARED', 'PENDING CO SIGN-OFF', 'PENDING GOO SIGN-OFF',
+          'PENDING COMD SIGN-OFF', 'APPROVED', 'REJECTED'
+        ]
+        && data.decisionByUid is string && data.decisionByUid.size() <= 128
+        && data.decisionByName is string && data.decisionByName.size() <= 100
+        && data.decisionByRole is string && data.decisionByRole.size() <= 20
+        && data.commandRemarks is string && data.commandRemarks.size() <= 2000
+        && data.submittedAt is timestamp
+        && (!('decidedAt' in data) || data.decidedAt is timestamp)
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAuditLog(data) {
+      return data.keys().hasAll([
+          'id', 'ormId', 'action', 'actorUid', 'actorName', 'actorRole',
+          'targetPilotId', 'summary', 'score', 'riskLevel', 'timestamp'
+        ])
+        && data.keys().hasOnly([
+          'id', 'ormId', 'action', 'actorUid', 'actorName', 'actorRole',
+          'targetPilotId', 'summary', 'score', 'riskLevel', 'timestamp'
+        ])
+        && isValidId(data.id)
+        && data.ormId is string && data.ormId.size() <= 128
+        && data.action in [
+          'ORM_SUBMITTED', 'ORM_CLEARED_AUTO', 'ORM_APPROVED', 'ORM_REJECTED',
+          'USER_VERIFIED', 'USER_ROLE_UPDATED', 'USER_SUSPENDED'
+        ]
+        && isValidId(data.actorUid)
+        && data.actorName is string && data.actorName.size() >= 1 && data.actorName.size() <= 100
+        && data.actorRole is string && data.actorRole.size() >= 1 && data.actorRole.size() <= 40
+        && data.targetPilotId is string && data.targetPilotId.size() >= 1 && data.targetPilotId.size() <= 128
+        && data.summary is string && data.summary.size() >= 1 && data.summary.size() <= 300
+        && data.score is number && data.score >= 0 && data.score <= 100
+        && data.riskLevel is string && data.riskLevel.size() >= 1 && data.riskLevel.size() <= 20
+        && data.timestamp is timestamp;
+    }
+
+    function isValidNotification(data) {
+      return data.keys().hasAll([
+          'id', 'ormId', 'type', 'recipientUid', 'recipientRole', 'senderUid',
+          'pilotName', 'missionCallsign', 'score', 'riskLevel', 'topRiskDrivers',
+          'title', 'body', 'readBy', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'ormId', 'type', 'recipientUid', 'recipientRole', 'senderUid',
+          'pilotName', 'missionCallsign', 'score', 'riskLevel', 'topRiskDrivers',
+          'title', 'body', 'readBy', 'createdAt'
+        ])
+        && isValidId(data.id)
+        && isValidId(data.ormId)
+        && data.type in ['MDA_REVIEW_REQUIRED', 'ORM_DECISION']
+        && data.recipientUid is string && data.recipientUid.size() >= 1 && data.recipientUid.size() <= 128
+        && data.recipientRole in ['Pilot', 'CO', 'GOO', 'Comd']
+        && isValidId(data.senderUid)
+        && data.pilotName is string && data.pilotName.size() >= 1 && data.pilotName.size() <= 100
+        && data.missionCallsign is string && data.missionCallsign.size() >= 1 && data.missionCallsign.size() <= 40
+        && data.score is number && data.score >= 0 && data.score <= 100
+        && data.riskLevel in ['LOW', 'MODERATE', 'HIGH', 'SEVERE']
+        && data.topRiskDrivers is list && data.topRiskDrivers.size() <= 5
+        && (data.topRiskDrivers.size() == 0 || data.topRiskDrivers[0] is string)
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 140
+        && data.body is string && data.body.size() >= 1 && data.body.size() <= 400
+        && data.readBy is list && data.readBy.size() <= 50
+        && (data.readBy.size() == 0 || data.readBy[0] is string)
+        && data.createdAt is timestamp;
+    }
+
+    // =========================================================================
+    // COLLECTION 1: /userRoles/{userId}
+    // =========================================================================
+    match /userRoles/{userId} {
+      // Users can get their own verification record; Admins and Command can read roster
+      allow get: if isValidId(userId) && isSignedIn() && (
+        isOwner(userId) || isAdmin() || isCommandRole()
+      );
+      allow list: if isSignedIn() && (isAdmin() || isCommandRole());
+
+      // Self-registration locked strictly to Pending + Pilot + non-Admin (except bootstrapped admin)
+      allow create: if isEmailVerified()
+        && isValidId(userId)
+        && isOwner(userId)
+        && isValidUserRole(incoming())
+        && incoming().uid == userId
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && (
+          (isBootstrappedAdmin() && incoming().status == 'Verified' && incoming().isAdmin == true) ||
+          (incoming().status == 'Pending' && incoming().commandRole == 'Pilot' && incoming().isAdmin == false)
+        );
+
+      // Only Admins can verify accounts or assign Command roles
+      allow update: if isEmailVerified()
+        && isValidId(userId)
+        && isValidUserRole(incoming())
+        && isAdmin()
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'displayName', 'rankCallsign', 'commandRole', 'status', 'isAdmin', 'updatedAt'
+        ]);
+
+      allow delete: if false;
+    }
+
+    // =========================================================================
+    // COLLECTION 2: /users/{userId}/private/{docId} (PII Isolation)
+    // =========================================================================
+    match /users/{userId}/private/{docId} {
+      allow get: if isValidId(userId) && isValidId(docId) && isSignedIn() && (
+        isOwner(userId) || isAdmin()
+      );
+      allow list: if false;
+
+      allow create: if isEmailVerified()
+        && isValidId(userId)
+        && isValidId(docId)
+        && docId == 'info'
+        && isOwner(userId)
+        && isValidUserPrivateInfo(incoming())
+        && incoming().uid == userId
+        && incoming().updatedAt == request.time;
+
+      allow update: if isEmailVerified()
+        && isValidId(userId)
+        && isValidId(docId)
+        && docId == 'info'
+        && isValidUserPrivateInfo(incoming())
+        && (isOwner(userId) || isAdmin())
+        && incoming().uid == existing().uid
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'email', 'fcmToken', 'notificationsEnabled', 'updatedAt'
+        ]);
+
+      allow delete: if false;
+    }
+
+    // =========================================================================
+    // COLLECTION 3: /ormSubmissions/{ormId}
+    // =========================================================================
+    match /ormSubmissions/{ormId} {
+      allow get: if isValidId(ormId) && isVerifiedUser() && (
+        existing().pilotId == request.auth.uid || isCommandRole() || isAdmin()
+      );
+
+      allow list: if isVerifiedUser() && (
+        resource.data.pilotId == request.auth.uid || isCommandRole() || isAdmin()
+      );
+
+      allow create: if isEmailVerified()
+        && isValidId(ormId)
+        && isValidOrmSubmission(incoming())
+        && isVerifiedUser()
+        && incoming().id == ormId
+        && incoming().pilotId == request.auth.uid
+        && incoming().pilotRole == actorCommandRole()
+        && incoming().riskLevel == expectedRiskLevel(incoming().totalScore)
+        && incoming().baseMdaRole == expectedBaseMda(incoming().totalScore)
+        && incoming().requiredMdaRole == expectedRequiredMda(incoming().totalScore, incoming().pilotRole)
+        && incoming().status == expectedInitialStatus(incoming().requiredMdaRole)
+        && incoming().decisionByUid == ''
+        && incoming().decisionByName == ''
+        && incoming().decisionByRole == ''
+        && incoming().commandRemarks == ''
+        && !('decidedAt' in incoming())
+        && incoming().submittedAt == request.time
+        && incoming().updatedAt == request.time;
+
+      // Action-Based Update: Command Sign-Off (Terminal Lock + Anti-Self-Approval for CO/GOO + Comd Full Authority)
+      allow update: if isEmailVerified()
+        && isValidId(ormId)
+        && isValidOrmSubmission(incoming())
+        && isCommandRole()
+        && incoming().id == existing().id
+        && incoming().pilotId == existing().pilotId
+        && incoming().submittedAt == existing().submittedAt
+        && incoming().updatedAt == request.time
+        && existing().status in ['PENDING CO SIGN-OFF', 'PENDING GOO SIGN-OFF', 'PENDING COMD SIGN-OFF']
+        && (existing().pilotId != request.auth.uid || actorCommandRole() == 'Comd')
+        && actorCommandRank() >= roleRank(existing().requiredMdaRole)
+        && incoming().status in ['APPROVED', 'REJECTED']
+        && incoming().decisionByUid == request.auth.uid
+        && incoming().decidedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'status', 'decisionByUid', 'decisionByName', 'decisionByRole',
+          'commandRemarks', 'decidedAt', 'updatedAt'
+        ]);
+
+      allow delete: if false;
+    }
+
+    // =========================================================================
+    // COLLECTION 4: /auditLogs/{logId} (Strictly Immutable)
+    // =========================================================================
+    match /auditLogs/{logId} {
+      allow get: if isValidId(logId) && isVerifiedUser() && (
+        existing().targetPilotId == request.auth.uid || isCommandRole() || isAdmin()
+      );
+      allow list: if isVerifiedUser() && (
+        resource.data.targetPilotId == request.auth.uid || isCommandRole() || isAdmin()
+      );
+
+      allow create: if isEmailVerified()
+        && isValidId(logId)
+        && isValidAuditLog(incoming())
+        && isVerifiedUser()
+        && incoming().id == logId
+        && incoming().actorUid == request.auth.uid
+        && incoming().timestamp == request.time;
+
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // =========================================================================
+    // COLLECTION 5: /notifications/{notifId}
+    // =========================================================================
+    match /notifications/{notifId} {
+      allow get: if isValidId(notifId) && isVerifiedUser() && (
+        existing().recipientUid == request.auth.uid || isCommandRole() || isAdmin()
+      );
+      allow list: if isVerifiedUser() && (
+        resource.data.recipientUid == request.auth.uid || isCommandRole() || isAdmin()
+      );
+
+      allow create: if isEmailVerified()
+        && isValidId(notifId)
+        && isValidNotification(incoming())
+        && isVerifiedUser()
+        && incoming().id == notifId
+        && incoming().senderUid == request.auth.uid
+        && incoming().createdAt == request.time;
+
+      allow update: if isEmailVerified()
+        && isValidId(notifId)
+        && isValidNotification(incoming())
+        && isVerifiedUser()
+        && (existing().recipientUid == request.auth.uid || isCommandRole() || isAdmin())
+        && incoming().id == existing().id
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['readBy']);
+
+      allow delete: if false;
+    }
+  }
+}

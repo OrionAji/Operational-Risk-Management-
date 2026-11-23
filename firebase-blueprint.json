@@ -1,0 +1,412 @@
+{
+  "entities": {
+    "UserRole": {
+      "title": "UserRole",
+      "description": "Verification status and command role registry for 407 ACTG aviation personnel. Contains no PII.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "rankCallsign": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "commandRole": {
+          "type": "string",
+          "enum": ["Pilot", "CO", "GOO", "Comd"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Pending", "Verified", "Suspended"]
+        },
+        "isAdmin": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "rankCallsign", "commandRole", "status", "isAdmin", "createdAt", "updatedAt"]
+    },
+    "UserPrivateInfo": {
+      "title": "UserPrivateInfo",
+      "description": "Isolated PII and push notification device token for a user, restricted strictly to owner and admin.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 160
+        },
+        "fcmToken": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "notificationsEnabled": {
+          "type": "boolean"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "notificationsEnabled", "updatedAt"]
+    },
+    "OrmSubmission": {
+      "title": "OrmSubmission",
+      "description": "Pre-flight Operational Risk Management checklist record with live score, MDA routing, and sign-off status.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "pilotId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "pilotName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "rankCallsign": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "pilotRole": {
+          "type": "string",
+          "enum": ["Pilot", "CO", "GOO", "Comd"]
+        },
+        "sortieDate": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "maxLength": 10
+        },
+        "aircraftTail": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "missionCallsign": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "itemizedBreakdown": {
+          "type": "array",
+          "description": "Fixed 16-item ORM checklist breakdown."
+        },
+        "totalScore": {
+          "type": "number"
+        },
+        "riskLevel": {
+          "type": "string",
+          "enum": ["LOW", "MODERATE", "HIGH", "SEVERE"]
+        },
+        "baseMdaRole": {
+          "type": "string",
+          "enum": ["Pilot", "CO", "GOO", "Comd"]
+        },
+        "requiredMdaRole": {
+          "type": "string",
+          "enum": ["Pilot", "CO", "GOO", "Comd"]
+        },
+        "escalated": {
+          "type": "boolean"
+        },
+        "topRiskDrivers": {
+          "type": "array",
+          "description": "Up to 5 highest-scoring risk drivers."
+        },
+        "mitigationNotes": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "CLEARED",
+            "PENDING CO SIGN-OFF",
+            "PENDING GOO SIGN-OFF",
+            "PENDING COMD SIGN-OFF",
+            "APPROVED",
+            "REJECTED"
+          ]
+        },
+        "decisionByUid": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "decisionByName": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "decisionByRole": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "commandRemarks": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "submittedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "decidedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "pilotId",
+        "pilotName",
+        "rankCallsign",
+        "pilotRole",
+        "sortieDate",
+        "aircraftTail",
+        "missionCallsign",
+        "itemizedBreakdown",
+        "totalScore",
+        "riskLevel",
+        "baseMdaRole",
+        "requiredMdaRole",
+        "escalated",
+        "topRiskDrivers",
+        "mitigationNotes",
+        "status",
+        "decisionByUid",
+        "decisionByName",
+        "decisionByRole",
+        "commandRemarks",
+        "submittedAt",
+        "updatedAt"
+      ]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Immutable aviation safety audit trail recording ORM submissions, command sign-offs, and admin verifications.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ormId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "ORM_SUBMITTED",
+            "ORM_CLEARED_AUTO",
+            "ORM_APPROVED",
+            "ORM_REJECTED",
+            "USER_VERIFIED",
+            "USER_ROLE_UPDATED",
+            "USER_SUSPENDED"
+          ]
+        },
+        "actorUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "actorName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "actorRole": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "targetPilotId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "score": {
+          "type": "number"
+        },
+        "riskLevel": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ormId",
+        "action",
+        "actorUid",
+        "actorName",
+        "actorRole",
+        "targetPilotId",
+        "summary",
+        "score",
+        "riskLevel",
+        "timestamp"
+      ]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Real-time MDA escalation and pilot sign-off alert payloads.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ormId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "type": {
+          "type": "string",
+          "enum": ["MDA_REVIEW_REQUIRED", "ORM_DECISION"]
+        },
+        "recipientUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "recipientRole": {
+          "type": "string",
+          "enum": ["Pilot", "CO", "GOO", "Comd"]
+        },
+        "senderUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "pilotName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "missionCallsign": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "score": {
+          "type": "number"
+        },
+        "riskLevel": {
+          "type": "string",
+          "enum": ["LOW", "MODERATE", "HIGH", "SEVERE"]
+        },
+        "topRiskDrivers": {
+          "type": "array",
+          "description": "Up to 5 highest risk drivers."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 400
+        },
+        "readBy": {
+          "type": "array",
+          "description": "Bounded list of UIDs who have acknowledged the alert."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ormId",
+        "type",
+        "recipientUid",
+        "recipientRole",
+        "senderUid",
+        "pilotName",
+        "missionCallsign",
+        "score",
+        "riskLevel",
+        "topRiskDrivers",
+        "title",
+        "body",
+        "readBy",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/userRoles/{userId}": {
+      "schema": { "$ref": "#/entities/UserRole" },
+      "description": "Non-PII verification status and command role registry."
+    },
+    "/users/{userId}/private/{docId}": {
+      "schema": { "$ref": "#/entities/UserPrivateInfo" },
+      "description": "Isolated user PII and FCM push notification tokens."
+    },
+    "/ormSubmissions/{ormId}": {
+      "schema": { "$ref": "#/entities/OrmSubmission" },
+      "description": "Pre-flight ORM checklist submissions and command sign-off outcomes."
+    },
+    "/auditLogs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Immutable aviation safety audit trail."
+    },
+    "/notifications/{notifId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "MDA escalation and pilot approval/rejection notifications."
+    }
+  }
+}

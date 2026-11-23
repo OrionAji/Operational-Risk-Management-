@@ -1,0 +1,8 @@
+{
+  "name": "407 ACTG Operational Risk Management (ORM)",
+  "description": "Pre-flight Operational Risk Management (ORM) checklist, real-time four-tier risk scoring, Mission Decision Authority sign-off queue, offline PWA sync, and admin verification portal for 407 ACTG military aviation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
