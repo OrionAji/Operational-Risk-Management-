@@ -52,28 +52,29 @@ export const RiskScoreMeter: React.FC<{ score: number; level: RiskLevel }> = ({ 
   const pct = Math.min(100, Math.round((score / 24) * 100));
   return (
     <div className="w-full" aria-label={`Risk score meter: ${score} points, ${meta.label}`}>
-      <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+      <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-200"
           style={{ width: `${Math.max(pct, score > 0 ? 6 : 2)}%`, backgroundColor: meta.colorHex }}
         />
       </div>
-      <div className="mt-1.5 flex items-center justify-between text-[11px] font-mono-data text-slate-500">
-        <span className="text-[#2E7D32] font-medium">0–5 Low</span>
-        <span className="text-[#B45309] font-medium">6–12 Mod</span>
-        <span className="text-[#E65100] font-medium">13–15 High</span>
-        <span className="text-[#C62828] font-medium">16+ Severe</span>
+      <div className="mt-1.5 flex items-center justify-between text-[11px] font-mono-data text-slate-500 dark:text-slate-400">
+        <span className="text-[#2E7D32] dark:text-[#66BB6A] font-medium">0–5 Low</span>
+        <span className="text-[#B45309] dark:text-[#FBBF24] font-medium">6–12 Mod</span>
+        <span className="text-[#E65100] dark:text-[#FB923C] font-medium">13–15 High</span>
+        <span className="text-[#C62828] dark:text-[#F87171] font-medium">16+ Severe</span>
       </div>
     </div>
   );
 };
 
 export const OrmStatusText: React.FC<{ status: OrmStatus }> = ({ status }) => {
-  let colorClass = 'text-slate-700';
-  if (status === 'CLEARED' || status === 'APPROVED') colorClass = 'text-[#2E7D32]';
-  else if (status === 'PENDING CO SIGN-OFF') colorClass = 'text-[#B45309]';
-  else if (status === 'PENDING GOO SIGN-OFF') colorClass = 'text-[#E65100]';
-  else if (status === 'PENDING COMD SIGN-OFF' || status === 'REJECTED') colorClass = 'text-[#C62828]';
+  let colorClass = 'text-slate-700 dark:text-slate-300';
+  if (status === 'CLEARED' || status === 'APPROVED') colorClass = 'text-[#2E7D32] dark:text-[#66BB6A]';
+  else if (status === 'PENDING CO SIGN-OFF') colorClass = 'text-[#B45309] dark:text-[#FBBF24]';
+  else if (status === 'PENDING GOO SIGN-OFF') colorClass = 'text-[#E65100] dark:text-[#FB923C]';
+  else if (status === 'PENDING COMD SIGN-OFF' || status === 'REJECTED')
+    colorClass = 'text-[#C62828] dark:text-[#F87171]';
 
   return <span className={`font-semibold text-xs tracking-wide ${colorClass}`}>{status}</span>;
 };

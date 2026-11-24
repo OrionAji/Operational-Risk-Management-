@@ -31,11 +31,13 @@ import {
   generateSafeId,
   markNotificationReadInFirestore,
   registerUserAccount,
+  saveUserThemePreferenceInFirestore,
   subscribeToAllUserRoles,
   subscribeToAuditLogs,
   subscribeToNotifications,
   subscribeToOrmSubmissions,
   subscribeToOwnUserRole,
+  subscribeToUserPrivateInfo,
   triggerLocalPushNotification,
   updateUserRoleAsAdminInFirestore,
 } from './services/ormService';
@@ -46,6 +48,7 @@ import type {
   OrmEvaluationResult,
   OrmNotification,
   OrmSubmission,
+  ThemePreference,
   UserRoleProfile,
 } from './types/orm';
 import {
@@ -55,6 +58,12 @@ import {
   savePendingRegistrationProfile,
 } from './utils/authValidation';
 import { canUserApproveOrm, RISK_TIER_CONFIG, ROLE_HIERARCHY } from './utils/ormScoring';
+import {
+  applyThemeToDocument,
+  getNextThemePreference,
+  loadCachedThemePreference,
+  saveCachedThemePreference,
+} from './utils/themePreference';
 
 function AppShell() {
   const isOnline = useOnlineStatus();
@@ -84,7 +93,8 @@ function AppShell() {
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [notifications, setNotifications] = useState<OrmNotification[]>([]);
 
-  // UI Navigation & Overlays
+  // UI Navigation, Theme & Overlays
+  const [theme, setTheme] = useState<ThemePreference>(() => loadCachedThemePreference());
   const [activeTab, setActiveTab] = useState<ActiveTab>('my-orm');
   const [selectedOrmId, setSelectedOrmId] = useState<string | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -98,6 +108,12 @@ function AppShell() {
 
   const seenNotificationIds = useRef<Set<string>>(new Set());
   const autoRegisterAttemptedUid = useRef<string | null>(null);
+
+  // Keep DOM root `.dark` class and localStorage cache synchronized with theme state
+  useEffect(() => {
+    applyThemeToDocument(theme);
+    saveCachedThemePreference(theme);
+  }, [theme]);
 
   // Initialize deterministic preview state ONLY when ?autostart=1 is explicitly provided
   useEffect(() => {
@@ -160,6 +176,7 @@ function AppShell() {
             email: firebaseUser.email || '',
             displayName: pending.displayName,
             rankCallsign: pending.rankCallsign,
+            themePreference: loadCachedThemePreference(),
           })
             .then((created) => {
               clearPendingRegistrationProfile(firebaseUser.uid);
@@ -169,6 +186,17 @@ function AppShell() {
               setAuthError(formatFirebaseAuthError(err));
             });
         }
+      }
+    });
+    return unsub;
+  }, [previewConfig.enabled, firebaseUser, isEmailVerifiedState]);
+
+  // Sync user's saved theme preference from their Firestore private profile in real time
+  useEffect(() => {
+    if (previewConfig.enabled || !firebaseUser || !isEmailVerifiedState) return;
+    const unsub = subscribeToUserPrivateInfo(firebaseUser.uid, (privateInfo) => {
+      if (privateInfo?.themePreference) {
+        setTheme(privateInfo.themePreference);
       }
     });
     return unsub;
@@ -400,6 +428,7 @@ function AppShell() {
         email: firebaseUser.email || '',
         displayName,
         rankCallsign,
+        themePreference: theme,
       });
       clearPendingRegistrationProfile(firebaseUser.uid);
       setUserProfile(profile);
@@ -407,6 +436,20 @@ function AppShell() {
       setAuthError(formatFirebaseAuthError(err));
     } finally {
       setAuthLoading(false);
+    }
+  };
+
+  const handleToggleTheme = () => {
+    const nextTheme = getNextThemePreference(theme);
+    setTheme(nextTheme);
+    if (!previewConfig.enabled && firebaseUser && isEmailVerifiedState) {
+      void saveUserThemePreferenceInFirestore({
+        uid: firebaseUser.uid,
+        email: firebaseUser.email || userProfile?.email || '',
+        theme: nextTheme,
+      }).catch(() => {
+        // Theme remains applied locally and cached if offline or rules reject before profile exists
+      });
     }
   };
 
@@ -625,10 +668,10 @@ function AppShell() {
   // Loading Splash
   if (!authReady || (firebaseUser && isEmailVerifiedState && !profileLoaded)) {
     return (
-      <div className="min-h-screen bg-[#F4F5F7] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-[#F4F5F7] dark:bg-[#0B1120] flex items-center justify-center p-6 transition-colors">
         <div className="text-center space-y-2">
-          <div className="font-display text-2xl font-bold text-slate-900">407 ACTG ORM</div>
-          <p className="text-xs text-slate-500">Verifying credentials and offline cache...</p>
+          <div className="font-display text-2xl font-bold text-slate-900 dark:text-slate-100">407 ACTG ORM</div>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Verifying credentials and offline cache...</p>
         </div>
       </div>
     );
@@ -639,6 +682,8 @@ function AppShell() {
     return (
       <AuthPortal
         mode="verify-email"
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
         authEmail="1lt.brooks@us.af.mil"
         loading={authLoading}
         error={authError}
@@ -661,6 +706,8 @@ function AppShell() {
     return (
       <AuthPortal
         mode="signin"
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
         loading={authLoading}
         error={authError}
         infoMessage={authInfoMessage}
@@ -682,6 +729,8 @@ function AppShell() {
     return (
       <AuthPortal
         mode="verify-email"
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
         authEmail={firebaseUser.email || ''}
         loading={authLoading}
         error={authError}
@@ -704,6 +753,8 @@ function AppShell() {
     return (
       <AuthPortal
         mode="register"
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
         authEmail={firebaseUser?.email || ''}
         authDisplayName={firebaseUser?.displayName || ''}
         loading={authLoading}
@@ -724,13 +775,20 @@ function AppShell() {
 
   // Strictly Locked Pending or Suspended Verification Gate
   if (userProfile.status !== 'Verified') {
-    return <PendingVerificationView profile={userProfile} onSignOut={handleSignOut} />;
+    return (
+      <PendingVerificationView
+        profile={userProfile}
+        onSignOut={handleSignOut}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
+      />
+    );
   }
 
   const hasCommandAccess = userProfile.commandRole !== 'Pilot' || userProfile.isAdmin;
 
   return (
-    <div className="min-h-screen bg-[#F4F5F7] text-slate-900 flex flex-col">
+    <div className="min-h-screen bg-[#F4F5F7] dark:bg-[#0B1120] text-slate-900 dark:text-slate-100 flex flex-col transition-colors">
       <TopNavBar
         user={userProfile}
         activeTab={activeTab}
@@ -742,11 +800,13 @@ function AppShell() {
         onSignOut={handleSignOut}
         isOnline={isOnline}
         pendingSyncCount={pendingSyncCount}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
       />
 
       {/* Real-Time Push Alert Toast */}
       {liveToast && (
-        <div className="fixed top-20 right-4 z-50 w-[calc(100vw-2rem)] max-w-sm bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden">
+        <div className="fixed top-20 right-4 z-50 w-[calc(100vw-2rem)] max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden">
           <div
             className="px-4 py-2 text-xs font-bold flex items-center justify-between"
             style={{
@@ -768,7 +828,7 @@ function AppShell() {
             </button>
           </div>
           <div className="p-3.5">
-            <p className="text-xs text-slate-700 leading-relaxed">{liveToast.body}</p>
+            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{liveToast.body}</p>
             <button
               type="button"
               onClick={() => {
@@ -776,7 +836,7 @@ function AppShell() {
                 setSelectedOrmId(liveToast.ormId);
                 setLiveToast(null);
               }}
-              className="mt-2.5 text-xs font-semibold text-[#0F172A] underline"
+              className="mt-2.5 text-xs font-semibold text-[#0F172A] dark:text-slate-100 underline"
             >
               Inspect Mission ORM
             </button>
@@ -800,6 +860,7 @@ function AppShell() {
             submissions={submissions}
             auditLogs={auditLogs}
             onInspectOrm={(orm) => setSelectedOrmId(orm.id)}
+            theme={theme}
           />
         )}
 

@@ -157,16 +157,16 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
       {/* Page Header & Segmented Sub-View Switch */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
         <div>
-          <h1 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight leading-none">
+          <h1 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-none">
             My Flight ORM
           </h1>
-          <p className="mt-1.5 text-sm text-slate-600">
+          <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-400">
             Pre-flight 16-item risk assessment · Real-time four-tier scoring and MDA routing
           </p>
         </div>
 
         <div
-          className="inline-flex items-center p-1 rounded-lg bg-slate-200/80 self-start sm:self-auto"
+          className="inline-flex items-center p-1 rounded-lg bg-slate-200/80 dark:bg-slate-800/90 self-start sm:self-auto"
           role="tablist"
           aria-label="Flight ORM sections"
         >
@@ -177,8 +177,8 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
             onClick={() => setSubView('form')}
             className={`min-h-[38px] px-3.5 py-1.5 rounded-md text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
               subView === 'form'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
             }`}
           >
             Pre-Flight Worksheet
@@ -190,8 +190,8 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
             onClick={() => setSubView('history')}
             className={`min-h-[38px] px-3.5 py-1.5 rounded-md text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
               subView === 'history'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
             }`}
           >
             My Submissions ({mySubmissions.length})
@@ -203,7 +203,7 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
       {submitBanner && (
         <div
           role="status"
-          className="mb-6 rounded-xl border border-slate-200 bg-white p-4 flex items-start justify-between gap-4 shadow-sm"
+          className="mb-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 flex items-start justify-between gap-4 shadow-sm"
         >
           <div className="flex items-start gap-3">
             <CheckCircle2
@@ -211,14 +211,14 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
               style={{ color: submitBanner.colorHex }}
             />
             <div>
-              <p className="text-sm font-semibold text-slate-900">{submitBanner.status}</p>
-              <p className="text-xs text-slate-600 mt-0.5">{submitBanner.message}</p>
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{submitBanner.status}</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">{submitBanner.message}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={() => setSubmitBanner(null)}
-            className="text-xs font-medium text-slate-500 hover:text-slate-800 whitespace-nowrap"
+            className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 whitespace-nowrap"
           >
             Dismiss
           </button>
@@ -228,41 +228,41 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
       {subView === 'history' ? (
         <section aria-label="My submitted flight ORMs" className="space-y-4">
           {mySubmissions.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-xl p-10 text-center">
-              <p className="font-display text-2xl font-bold text-slate-900">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-10 text-center">
+              <p className="font-display text-2xl font-bold text-slate-900 dark:text-slate-100">
                 No Flight ORMs Submitted Yet
               </p>
-              <p className="mt-1.5 text-sm text-slate-600 max-w-md mx-auto">
+              <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto">
                 Complete your pre-flight ORM worksheet prior to stepping to the aircraft. Low-risk
                 sorties clear immediately; elevated scores route automatically to your MDA.
               </p>
               <button
                 type="button"
                 onClick={() => setSubView('form')}
-                className="mt-5 min-h-[44px] px-5 py-2.5 rounded-lg bg-[#0F172A] text-white text-sm font-semibold hover:bg-slate-800 transition-colors"
+                className="mt-5 min-h-[44px] px-5 py-2.5 rounded-lg bg-[#0F172A] dark:bg-slate-100 text-white dark:text-slate-950 text-sm font-semibold hover:bg-slate-800 dark:hover:bg-white transition-colors"
               >
                 Start Pre-Flight ORM
               </button>
             </div>
           ) : (
-            <div className="bg-white border border-slate-200 rounded-xl divide-y divide-slate-200 overflow-hidden">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl divide-y divide-slate-200 dark:divide-slate-800 overflow-hidden">
               {mySubmissions.map((orm) => (
                 <button
                   key={orm.id}
                   type="button"
                   onClick={() => onSelectSubmission(orm)}
-                  className="w-full text-left px-4 sm:px-6 py-4 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  className="w-full text-left px-4 sm:px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                 >
                   <div className="min-w-0 space-y-1">
                     <div className="flex items-center gap-2.5 flex-wrap">
-                      <span className="font-display text-xl font-bold text-slate-900">
+                      <span className="font-display text-xl font-bold text-slate-900 dark:text-slate-100">
                         {orm.missionCallsign}
                       </span>
-                      <span className="font-mono-data text-xs text-slate-500">
+                      <span className="font-mono-data text-xs text-slate-500 dark:text-slate-400">
                         {orm.aircraftTail} · {orm.sortieDate}
                       </span>
                       {orm.hasPendingWrites && (
-                        <span className="inline-flex items-center gap-1 text-xs font-medium text-[#B45309]">
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-[#B45309] dark:text-[#FBBF24]">
                           <CloudUpload className="w-3.5 h-3.5" aria-hidden="true" />
                           Queued Offline
                         </span>
@@ -272,19 +272,19 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
                       <RiskTierBadge level={orm.riskLevel} score={orm.totalScore} compact />
                       <OrmStatusText status={orm.status} />
                       {orm.escalated && (
-                        <span className="text-xs text-[#C2410C] font-medium">
+                        <span className="text-xs text-[#C2410C] dark:text-[#FB923C] font-medium">
                           · Escalated to {orm.requiredMdaRole}
                         </span>
                       )}
                     </div>
                     {orm.commandRemarks && (
-                      <p className="text-xs text-slate-600 line-clamp-1 pt-0.5">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-1 pt-0.5">
                         Command Remarks ({orm.decisionByRole}): {orm.commandRemarks}
                       </p>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 shrink-0">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 shrink-0">
                     <span>View Breakdown</span>
                     <ChevronRight className="w-4 h-4" aria-hidden="true" />
                   </div>
@@ -298,7 +298,7 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
           {validationErrors.length > 0 && (
             <div
               role="alert"
-              className="mb-6 rounded-xl border border-[#C62828]/35 bg-[#C62828]/8 p-4 text-sm text-[#C62828]"
+              className="mb-6 rounded-xl border border-[#C62828]/35 dark:border-red-500/40 bg-[#C62828]/8 dark:bg-red-950/45 p-4 text-sm text-[#C62828] dark:text-red-300"
             >
               <p className="font-semibold mb-1.5">Complete required pre-flight fields:</p>
               <ul className="list-disc list-inside space-y-1 text-xs">
@@ -315,19 +315,19 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
               {/* Sortie Header Fields Card */}
               <section
                 aria-labelledby="sortie-header-heading"
-                className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6"
               >
                 <div className="flex items-center justify-between gap-4 mb-4">
                   <h2
                     id="sortie-header-heading"
-                    className="font-display text-2xl font-bold text-slate-900"
+                    className="font-display text-2xl font-bold text-slate-900 dark:text-slate-100"
                   >
                     Sortie & Aircrew Header
                   </h2>
                   <button
                     type="button"
                     onClick={handleReset}
-                    className="inline-flex items-center gap-1.5 min-h-[36px] px-3 py-1 rounded-md border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors whitespace-nowrap"
+                    className="inline-flex items-center gap-1.5 min-h-[36px] px-3 py-1 rounded-md border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors whitespace-nowrap"
                   >
                     <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
                     <span>Reset Form</span>
@@ -338,7 +338,7 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
                   <div>
                     <label
                       htmlFor="orm-pilot-name"
-                      className="block text-xs font-semibold text-slate-700 mb-1.5"
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5"
                     >
                       Pilot Name
                     </label>
@@ -349,14 +349,14 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
                       maxLength={100}
                       value={pilotName}
                       onChange={(e) => setPilotName(e.target.value)}
-                      className="w-full min-h-[44px] rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:bg-white focus:border-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#0F172A]/15"
+                      className="w-full min-h-[44px] rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/80 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-950 focus:border-[#0F172A] dark:focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F172A]/15 dark:focus:ring-slate-400/20"
                     />
                   </div>
 
                   <div>
                     <label
                       htmlFor="orm-rank-callsign"
-                      className="block text-xs font-semibold text-slate-700 mb-1.5"
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5"
                     >
                       Rank / Callsign
                     </label>
@@ -368,14 +368,14 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
                       value={rankCallsign}
                       onChange={(e) => setRankCallsign(e.target.value)}
                       placeholder="Capt / ATLAS 41"
-                      className="w-full min-h-[44px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#0F172A]/15"
+                      className="w-full min-h-[44px] rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-[#0F172A] dark:focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F172A]/15 dark:focus:ring-slate-400/20"
                     />
                   </div>
 
                   <div>
                     <label
                       htmlFor="orm-sortie-date"
-                      className="block text-xs font-semibold text-slate-700 mb-1.5"
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5"
                     >
                       Sortie Date
                     </label>
@@ -385,14 +385,14 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
                       required
                       value={sortieDate}
                       onChange={(e) => setSortieDate(e.target.value)}
-                      className="w-full min-h-[44px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-mono-data text-slate-900 focus:border-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#0F172A]/15"
+                      className="w-full min-h-[44px] rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm font-mono-data text-slate-900 dark:text-slate-100 focus:border-[#0F172A] dark:focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F172A]/15 dark:focus:ring-slate-400/20"
                     />
                   </div>
 
                   <div>
                     <label
                       htmlFor="orm-aircraft-tail"
-                      className="block text-xs font-semibold text-slate-700 mb-1.5"
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5"
                     >
                       Aircraft / Tail Number
                     </label>
@@ -404,14 +404,14 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
                       value={aircraftTail}
                       onChange={(e) => setAircraftTail(e.target.value)}
                       placeholder="e.g. C-130J #4071"
-                      className="w-full min-h-[44px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-mono-data text-slate-900 focus:border-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#0F172A]/15"
+                      className="w-full min-h-[44px] rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm font-mono-data text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-[#0F172A] dark:focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F172A]/15 dark:focus:ring-slate-400/20"
                     />
                   </div>
 
                   <div className="sm:col-span-2">
                     <label
                       htmlFor="orm-mission-callsign"
-                      className="block text-xs font-semibold text-slate-700 mb-1.5"
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5"
                     >
                       Mission Callsign
                     </label>
@@ -423,7 +423,7 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
                       value={missionCallsign}
                       onChange={(e) => setMissionCallsign(e.target.value)}
                       placeholder="e.g. ATLAS 41 / SPEAR 04"
-                      className="w-full min-h-[44px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-mono-data text-slate-900 focus:border-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#0F172A]/15"
+                      className="w-full min-h-[44px] rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm font-mono-data text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-[#0F172A] dark:focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F172A]/15 dark:focus:ring-slate-400/20"
                     />
                   </div>
                 </div>
@@ -438,27 +438,27 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
                   <section
                     key={section.id}
                     aria-labelledby={`section-${section.id}-heading`}
-                    className="bg-white border border-slate-200 rounded-xl overflow-hidden"
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden"
                   >
-                    <div className="px-5 sm:px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-4">
+                    <div className="px-5 sm:px-6 py-4 bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
                       <div>
                         <h2
                           id={`section-${section.id}-heading`}
-                          className="font-display text-2xl font-bold text-slate-900 tracking-tight"
+                          className="font-display text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight"
                         >
                           {section.code}: {section.title}
                         </h2>
-                        <p className="text-xs text-slate-500 mt-0.5">{section.subtitle}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{section.subtitle}</p>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-[11px] font-medium text-slate-500">Section Total</div>
-                        <div className="font-mono-data text-lg font-bold text-slate-900">
+                        <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Section Total</div>
+                        <div className="font-mono-data text-lg font-bold text-slate-900 dark:text-slate-100">
                           {sectionSubtotal} pts
                         </div>
                       </div>
                     </div>
 
-                    <div className="divide-y divide-slate-200">
+                    <div className="divide-y divide-slate-200 dark:divide-slate-800">
                       {items.map((item) => {
                         const activeSelection = selections[item.id] ?? {
                           optionId: item.options[0].id,
@@ -468,8 +468,8 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
                         return (
                           <fieldset key={item.id} className="p-4 sm:p-5">
                             <div className="flex items-baseline justify-between gap-3 mb-3">
-                              <legend className="text-sm font-semibold text-slate-900">
-                                <span className="font-mono-data text-xs text-slate-400 mr-2">
+                              <legend className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                <span className="font-mono-data text-xs text-slate-400 dark:text-slate-500 mr-2">
                                   {String(item.number).padStart(2, '0')}.
                                 </span>
                                 {item.title}
@@ -477,12 +477,12 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
                               <span
                                 className={`font-mono-data text-xs font-semibold shrink-0 ${
                                   activeSelection.points >= 4
-                                    ? 'text-[#C62828]'
+                                    ? 'text-[#C62828] dark:text-[#F87171]'
                                     : activeSelection.points >= 2
-                                      ? 'text-[#E65100]'
+                                      ? 'text-[#E65100] dark:text-[#FB923C]'
                                       : activeSelection.points > 0
-                                        ? 'text-[#B45309]'
-                                        : 'text-slate-400'
+                                        ? 'text-[#B45309] dark:text-[#FBBF24]'
+                                        : 'text-slate-400 dark:text-slate-500'
                                 }`}
                               >
                                 +{activeSelection.points} pt{activeSelection.points === 1 ? '' : 's'}
@@ -490,7 +490,7 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
                             </div>
 
                             {item.subtitle && (
-                              <p className="text-xs text-slate-500 -mt-1.5 mb-3">{item.subtitle}</p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 -mt-1.5 mb-3">{item.subtitle}</p>
                             )}
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -505,8 +505,8 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
                                     key={opt.id}
                                     className={`rounded-lg border ${
                                       isSelected
-                                        ? 'border-[#0F172A] ring-1 ring-[#0F172A] bg-[#0F172A]/[0.04]'
-                                        : 'border-slate-200 bg-white hover:border-slate-300'
+                                        ? 'border-[#0F172A] dark:border-slate-200 ring-1 ring-[#0F172A] dark:ring-slate-200 bg-[#0F172A]/[0.04] dark:bg-slate-800/90'
+                                        : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-600'
                                     } ${opt.variableScores && isSelected ? 'sm:col-span-2' : ''}`}
                                   >
                                     <button
@@ -525,34 +525,34 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
                                         <span
                                           className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
                                             isSelected
-                                              ? 'border-[#0F172A] bg-[#0F172A]'
-                                              : 'border-slate-300 bg-white'
+                                              ? 'border-[#0F172A] dark:border-slate-100 bg-[#0F172A] dark:bg-slate-100'
+                                              : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900'
                                           }`}
                                           aria-hidden="true"
                                         >
                                           {isSelected && (
-                                            <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                                            <span className="w-1.5 h-1.5 rounded-full bg-white dark:bg-slate-950" />
                                           )}
                                         </span>
                                         <span
                                           className={`text-sm leading-snug ${
                                             isSelected
-                                              ? 'font-semibold text-slate-950'
-                                              : 'text-slate-700'
+                                              ? 'font-semibold text-slate-950 dark:text-white'
+                                              : 'text-slate-700 dark:text-slate-300'
                                           }`}
                                         >
                                           {opt.label}
                                         </span>
                                       </span>
-                                      <span className="font-mono-data text-xs font-medium text-slate-500 whitespace-nowrap shrink-0">
+                                      <span className="font-mono-data text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap shrink-0">
                                         {scoreDisplay}
                                       </span>
                                     </button>
 
                                     {/* Exact Variable Score Picker (Sleep Cycle 1-3, Personal Stress 1-4, Evaluation 3-6) */}
                                     {opt.variableScores && isSelected && (
-                                      <div className="px-3.5 pb-3 pt-1 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-2">
-                                        <span className="text-xs font-medium text-slate-600">
+                                      <div className="px-3.5 pb-3 pt-1 border-t border-slate-200/80 dark:border-slate-700/80 flex flex-wrap items-center justify-between gap-2">
+                                        <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
                                           Pick exact risk score:
                                         </span>
                                         <div
@@ -572,8 +572,8 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
                                                 }
                                                 className={`min-h-[38px] min-w-[44px] px-3 py-1 rounded-md font-mono-data text-xs font-semibold border transition-colors ${
                                                   activeVal
-                                                    ? 'bg-[#0F172A] text-white border-[#0F172A]'
-                                                    : 'bg-white text-slate-700 border-slate-300 hover:border-slate-500'
+                                                    ? 'bg-[#0F172A] dark:bg-slate-100 text-white dark:text-slate-950 border-[#0F172A] dark:border-slate-100'
+                                                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:border-slate-500 dark:hover:border-slate-400'
                                                 }`}
                                               >
                                                 {val} pt{val === 1 ? '' : 's'}
@@ -599,24 +599,29 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
               {evaluation.requiresMitigation && (
                 <section
                   aria-labelledby="mitigation-notes-heading"
-                  className="bg-white border rounded-xl p-5 sm:p-6"
+                  className="bg-white dark:bg-slate-900 border rounded-xl p-5 sm:p-6"
                   style={{ borderColor: evaluation.riskMeta.colorHex }}
                 >
                   <div className="flex items-center justify-between gap-3 mb-2">
                     <h2
                       id="mitigation-notes-heading"
-                      className="font-display text-2xl font-bold text-slate-900"
+                      className="font-display text-2xl font-bold text-slate-900 dark:text-slate-100"
                     >
                       Mitigation Notes / Remarks
                     </h2>
                     <span
-                      className="text-xs font-semibold"
-                      style={{ color: evaluation.riskMeta.colorHex }}
+                      className={`text-xs font-semibold ${
+                        evaluation.riskLevel === 'SEVERE'
+                          ? 'text-[#C62828] dark:text-[#F87171]'
+                          : evaluation.riskLevel === 'HIGH'
+                            ? 'text-[#E65100] dark:text-[#FB923C]'
+                            : 'text-[#B45309] dark:text-[#FBBF24]'
+                      }`}
                     >
                       Required (Score &ge; 6)
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600 mb-3">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
                     Document concrete risk mitigations, crew briefings, alternate planning, or
                     operational gates for {ROLE_FULL_LABELS[evaluation.requiredMdaRole]} review.
                   </p>
@@ -631,7 +636,7 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
                     value={mitigationNotes}
                     onChange={(e) => setMitigationNotes(e.target.value)}
                     placeholder="Example: Added 30-min crew rest buffer, verified crosswind margins, briefed hard abort limits with Instructor Pilot..."
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#0F172A]/15"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-[#0F172A] dark:focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F172A]/15 dark:focus:ring-slate-400/20"
                   />
                 </section>
               )}
@@ -639,7 +644,7 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
 
             {/* Desktop Sticky Live Assessment Summary Column */}
             <aside className="hidden lg:block lg:col-span-4 sticky top-20 space-y-4">
-              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
                 <div
                   className="px-5 py-4 flex items-center justify-between"
                   style={{
@@ -661,55 +666,55 @@ export const OrmChecklistView: React.FC<OrmChecklistViewProps> = ({
                 <div className="p-5 space-y-5">
                   <RiskScoreMeter score={evaluation.totalScore} level={evaluation.riskLevel} />
 
-                  <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-200 text-center">
+                  <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-200 dark:border-slate-800 text-center">
                     <div>
-                      <div className="text-[11px] text-slate-500">Sec A</div>
-                      <div className="font-mono-data text-base font-bold text-slate-900">
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">Sec A</div>
+                      <div className="font-mono-data text-base font-bold text-slate-900 dark:text-slate-100">
                         {evaluation.sectionScores.A}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[11px] text-slate-500">Sec B</div>
-                      <div className="font-mono-data text-base font-bold text-slate-900">
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">Sec B</div>
+                      <div className="font-mono-data text-base font-bold text-slate-900 dark:text-slate-100">
                         {evaluation.sectionScores.B}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[11px] text-slate-500">Sec C</div>
-                      <div className="font-mono-data text-base font-bold text-slate-900">
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">Sec C</div>
+                      <div className="font-mono-data text-base font-bold text-slate-900 dark:text-slate-100">
                         {evaluation.sectionScores.C}
                       </div>
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-200 space-y-2 text-sm">
+                  <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2 text-sm">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs text-slate-500">Required MDA</span>
-                      <span className="font-semibold text-slate-900 text-xs text-right">
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Required MDA</span>
+                      <span className="font-semibold text-slate-900 dark:text-slate-100 text-xs text-right">
                         {evaluation.requiredMdaRole === 'Pilot'
                           ? 'Pilot Flying (Auto)'
                           : ROLE_FULL_LABELS[evaluation.requiredMdaRole]}
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs text-slate-500">Post-Submit Status</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Post-Submit Status</span>
                       <OrmStatusText status={evaluation.initialStatus} />
                     </div>
                   </div>
 
                   {evaluation.escalationReason && (
-                    <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 flex items-start gap-2 text-xs text-amber-900">
-                      <ShieldAlert className="w-4 h-4 text-[#E65100] shrink-0 mt-0.5" />
+                    <div className="rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 p-3 flex items-start gap-2 text-xs text-amber-900 dark:text-amber-200">
+                      <ShieldAlert className="w-4 h-4 text-[#E65100] dark:text-[#FB923C] shrink-0 mt-0.5" />
                       <span>{evaluation.escalationReason}</span>
                     </div>
                   )}
 
                   {evaluation.topRiskDrivers.length > 0 && (
-                    <div className="pt-3 border-t border-slate-200">
-                      <div className="text-xs font-semibold text-slate-500 mb-2">
+                    <div className="pt-3 border-t border-slate-200 dark:border-slate-800">
+                      <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
                         Active Risk Drivers
                       </div>
-                      <ul className="space-y-1.5 text-xs text-slate-700">
+                      <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
                         {evaluation.topRiskDrivers.map((d, idx) => (
                           <li key={idx} className="leading-snug">
                             • {d}

@@ -130,11 +130,12 @@ service cloud.firestore {
 
     function isValidUserPrivateInfo(data) {
       return data.keys().hasAll(['uid', 'email', 'notificationsEnabled', 'updatedAt'])
-        && data.keys().hasOnly(['uid', 'email', 'fcmToken', 'notificationsEnabled', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'fcmToken', 'notificationsEnabled', 'themePreference', 'updatedAt'])
         && isValidId(data.uid)
         && data.email is string && data.email.size() >= 3 && data.email.size() <= 160
         && (!('fcmToken' in data) || (data.fcmToken is string && data.fcmToken.size() <= 512))
         && data.notificationsEnabled is bool
+        && (!('themePreference' in data) || (data.themePreference is string && data.themePreference.size() <= 10 && data.themePreference in ['light', 'dark']))
         && data.updatedAt is timestamp;
     }
 
@@ -304,7 +305,7 @@ service cloud.firestore {
         && incoming().uid == existing().uid
         && incoming().updatedAt == request.time
         && incoming().diff(existing()).affectedKeys().hasOnly([
-          'email', 'fcmToken', 'notificationsEnabled', 'updatedAt'
+          'email', 'fcmToken', 'notificationsEnabled', 'themePreference', 'updatedAt'
         ]);
 
       allow delete: if false;

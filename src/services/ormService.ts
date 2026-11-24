@@ -27,9 +27,11 @@ import type {
   OrmEvaluationResult,
   OrmNotification,
   OrmSubmission,
+  ThemePreference,
   UserRoleProfile,
 } from '../types/orm';
 import { evaluateOrmChecklist, getDefaultSelections, getTodayIsoDate } from '../utils/ormScoring';
+import { isValidThemePreference, normalizeThemePreference } from '../utils/themePreference';
 
 export function generateSafeId(prefix: string): string {
   const rand = Math.random().toString(36).slice(2, 10);
@@ -156,16 +158,74 @@ export function subscribeToOwnUserRole(
   );
 }
 
+export function subscribeToUserPrivateInfo(
+  uid: string,
+  onData: (info: { themePreference?: ThemePreference; notificationsEnabled?: boolean } | null) => void
+): () => void {
+  const path = `users/${uid}/private/info`;
+  return onSnapshot(
+    doc(db, 'users', uid, 'private', 'info'),
+    (snap) => {
+      if (!snap.exists()) {
+        onData(null);
+        return;
+      }
+      const data = snap.data();
+      onData({
+        themePreference: isValidThemePreference(data.themePreference)
+          ? data.themePreference
+          : undefined,
+        notificationsEnabled:
+          typeof data.notificationsEnabled === 'boolean' ? data.notificationsEnabled : undefined,
+      });
+    },
+    (error) => {
+      handleFirestoreError(error, OperationType.GET, path);
+    }
+  );
+}
+
+export async function saveUserThemePreferenceInFirestore(params: {
+  uid: string;
+  email: string;
+  theme: ThemePreference;
+}): Promise<void> {
+  const cleanTheme = normalizeThemePreference(params.theme);
+  const path = `users/${params.uid}/private/info`;
+  const ref = doc(db, 'users', params.uid, 'private', 'info');
+  try {
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      await updateDoc(ref, {
+        themePreference: cleanTheme,
+        updatedAt: serverTimestamp(),
+      });
+    } else {
+      await setDoc(ref, {
+        uid: params.uid,
+        email: (params.email || 'pilot@407actg.mil').trim().slice(0, 160),
+        notificationsEnabled: false,
+        themePreference: cleanTheme,
+        updatedAt: serverTimestamp(),
+      });
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, path);
+  }
+}
+
 export async function registerUserAccount(params: {
   uid: string;
   email: string;
   displayName: string;
   rankCallsign: string;
+  themePreference?: ThemePreference;
 }): Promise<UserRoleProfile> {
   const isBootstrap = params.email.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL.toLowerCase();
   const cleanName = params.displayName.trim().slice(0, 100);
   const cleanRank = params.rankCallsign.trim().slice(0, 60);
   const cleanEmail = params.email.trim().slice(0, 160);
+  const cleanTheme = normalizeThemePreference(params.themePreference);
 
   const rolePath = `userRoles/${params.uid}`;
   const privatePath = `users/${params.uid}/private/info`;
@@ -185,6 +245,7 @@ export async function registerUserAccount(params: {
     uid: params.uid,
     email: cleanEmail,
     notificationsEnabled: false,
+    themePreference: cleanTheme,
     updatedAt: serverTimestamp(),
   };
 
@@ -847,10 +908,84 @@ export function buildAutostartPreviewData(roleParam: string | null): PreviewSeed
       decisionByName: '',
       decisionByRole: '',
       commandRemarks: '',
+      decidedAt: undefined,
       submittedAt: minsAgo(160),
       updatedAt: minsAgo(160),
     },
   ];
+
+  // Historical resolved sorties over the past 28 days (strictly for ?autostart=1 trend preview)
+  const daysAgoIso = (days: number): string => {
+    const dt = new Date(now.getTime() - days * 86400000);
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const d = String(dt.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
+  const historicalSpecs: Array<{
+    daysAgo: number;
+    score: number;
+    callsign: string;
+    tail: string;
+  }> = [
+    { daysAgo: 27, score: 4, callsign: 'ATLAS 08', tail: 'C-130J #4071' },
+    { daysAgo: 25, score: 7, callsign: 'HAWK 14', tail: 'C-130J #4074' },
+    { daysAgo: 23, score: 5, callsign: 'ATLAS 19', tail: 'C-130J #4072' },
+    { daysAgo: 21, score: 11, callsign: 'SPEAR 09', tail: 'C-130J #4079' },
+    { daysAgo: 19, score: 8, callsign: 'ATLAS 22', tail: 'C-130J #4071' },
+    { daysAgo: 17, score: 14, callsign: 'VECTOR 03', tail: 'C-130J #4077' },
+    { daysAgo: 15, score: 9, callsign: 'HAWK 18', tail: 'C-130J #4074' },
+    { daysAgo: 13, score: 6, callsign: 'ATLAS 27', tail: 'C-130J #4072' },
+    { daysAgo: 11, score: 4, callsign: 'ATLAS 30', tail: 'C-130J #4071' },
+    { daysAgo: 9, score: 10, callsign: 'SPEAR 12', tail: 'C-130J #4079' },
+    { daysAgo: 7, score: 13, callsign: 'VECTOR 07', tail: 'C-130J #4077' },
+    { daysAgo: 5, score: 8, callsign: 'HAWK 25', tail: 'C-130J #4074' },
+    { daysAgo: 3, score: 16, callsign: 'IRON 14', tail: 'C-130J #4080' },
+    { daysAgo: 2, score: 9, callsign: 'ATLAS 35', tail: 'C-130J #4071' },
+    { daysAgo: 1, score: 6, callsign: 'HAWK 29', tail: 'C-130J #4074' },
+  ];
+
+  for (const item of historicalSpecs) {
+    const isoDate = daysAgoIso(item.daysAgo);
+    const tsIso = `${isoDate}T09:00:00.000Z`;
+    const riskLevel =
+      item.score <= 5
+        ? 'LOW'
+        : item.score <= 12
+          ? 'MODERATE'
+          : item.score <= 15
+            ? 'HIGH'
+            : 'SEVERE';
+    const baseMdaRole: CommandRole =
+      item.score <= 5 ? 'Pilot' : item.score <= 12 ? 'CO' : item.score <= 15 ? 'GOO' : 'Comd';
+    submissions.push({
+      id: `orm_hist_${item.daysAgo}`,
+      pilotId: 'preview_pilot',
+      pilotName: 'Capt Sofia Reyes',
+      rankCallsign: 'Capt / ATLAS 41',
+      pilotRole: 'Pilot',
+      sortieDate: isoDate,
+      aircraftTail: item.tail,
+      missionCallsign: item.callsign,
+      itemizedBreakdown: evalLow.itemizedBreakdown,
+      totalScore: item.score,
+      riskLevel,
+      baseMdaRole,
+      requiredMdaRole: baseMdaRole,
+      escalated: false,
+      topRiskDrivers: item.score >= 6 ? ['Winds / Low Level Route'] : [],
+      mitigationNotes: item.score >= 6 ? 'Standard operational mitigation briefed and verified.' : '',
+      status: item.score <= 5 ? 'CLEARED' : 'APPROVED',
+      decisionByUid: item.score <= 5 ? '' : 'preview_comd',
+      decisionByName: item.score <= 5 ? '' : 'Col Marcus Vance',
+      decisionByRole: item.score <= 5 ? '' : 'Comd',
+      commandRemarks: item.score <= 5 ? '' : 'Mitigation verified; approved for sortie.',
+      submittedAt: tsIso,
+      decidedAt: item.score <= 5 ? undefined : tsIso,
+      updatedAt: tsIso,
+    });
+  }
 
   const auditLogs: AuditLogEntry[] = [
     {

@@ -4,6 +4,8 @@ export type AccountStatus = 'Pending' | 'Verified' | 'Suspended';
 
 export type RiskLevel = 'LOW' | 'MODERATE' | 'HIGH' | 'SEVERE';
 
+export type ThemePreference = 'light' | 'dark';
+
 export type OrmStatus =
   | 'CLEARED'
   | 'PENDING CO SIGN-OFF'
@@ -84,6 +86,7 @@ export interface UserRoleProfile {
   isAdmin: boolean;
   email?: string;
   notificationsEnabled?: boolean;
+  themePreference?: ThemePreference;
   createdAt: string;
   updatedAt: string;
 }

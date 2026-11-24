@@ -36,15 +36,15 @@ export class ErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-[#F4F5F7] flex items-center justify-center p-6">
-          <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-            <div className="flex items-center gap-3 text-[#C62828] mb-3">
+        <div className="min-h-screen bg-[#F4F5F7] dark:bg-[#0B1120] flex items-center justify-center p-6">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-3 text-[#C62828] dark:text-[#F87171] mb-3">
               <ShieldAlert className="w-6 h-6 shrink-0" />
               <h1 className="font-display text-2xl font-bold tracking-tight">
                 {this.state.isPermissionError ? 'Access Restricted' : 'Application Error'}
               </h1>
             </div>
-            <p className="text-sm text-slate-600 leading-relaxed mb-5">
+            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-5">
               {this.state.isPermissionError
                 ? 'Your account does not have security clearance for this database operation. If your pilot registration is still pending, wait for an Admin to verify your account.'
                 : this.state.errorMessage}
@@ -52,7 +52,7 @@ export class ErrorBoundary extends React.Component<
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="inline-flex items-center justify-center gap-2 w-full min-h-[44px] px-4 py-2.5 rounded-lg bg-[#0F172A] text-white text-sm font-semibold hover:bg-slate-800 transition-colors"
+              className="inline-flex items-center justify-center gap-2 w-full min-h-[44px] px-4 py-2.5 rounded-lg bg-[#0F172A] dark:bg-slate-100 text-white dark:text-slate-950 text-sm font-semibold hover:bg-slate-800 dark:hover:bg-white transition-colors"
             >
               <RotateCcw className="w-4 h-4" />
               Reload 407 ACTG ORM

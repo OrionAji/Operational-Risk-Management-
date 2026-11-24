@@ -66,6 +66,11 @@
         "notificationsEnabled": {
           "type": "boolean"
         },
+        "themePreference": {
+          "type": "string",
+          "enum": ["light", "dark"],
+          "description": "User UI theme preference persisted across sessions."
+        },
         "updatedAt": {
           "type": "string",
           "format": "date-time"

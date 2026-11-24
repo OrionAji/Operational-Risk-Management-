@@ -13,11 +13,12 @@ export default defineConfig(() => {
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: [
-          'icon.svg',
+          'favicon.png',
           'apple-touch-icon.png',
           'pwa-192x192.png',
           'pwa-512x512.png',
           'pwa-maskable-512x512.png',
+          'assets/aistudio/407_Logo_without_BG_309bff86.png',
           'firebase-messaging-sw.js',
         ],
         manifest: {

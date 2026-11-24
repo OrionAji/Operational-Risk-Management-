@@ -30,21 +30,21 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex justify-end bg-slate-900/50"
+      className="fixed inset-0 z-50 flex justify-end bg-slate-900/50 dark:bg-slate-950/75"
       role="dialog"
       aria-modal="true"
       aria-labelledby="notifications-drawer-title"
     >
-      <div className="w-full max-w-md bg-white h-full flex flex-col border-l border-slate-200 shadow-xl">
-        <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 h-full flex flex-col border-l border-slate-200 dark:border-slate-800 shadow-xl">
+        <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div>
             <h2
               id="notifications-drawer-title"
-              className="font-display text-2xl font-bold text-slate-900 tracking-tight"
+              className="font-display text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight"
             >
               Mission Alerts & Push Inbox
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               FCM push notifications and real-time MDA sign-off updates
             </p>
           </div>
@@ -52,17 +52,17 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Close notifications"
-            className="min-h-[40px] min-w-[40px] inline-flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
+            className="min-h-[40px] min-w-[40px] inline-flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* FCM Push Permission Bar */}
-        <div className="px-5 py-3.5 bg-slate-50 border-b border-slate-200">
+        <div className="px-5 py-3.5 bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 text-xs text-slate-700">
-              <BellRing className="w-4 h-4 text-slate-700 shrink-0" aria-hidden="true" />
+            <div className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+              <BellRing className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" aria-hidden="true" />
               <span>
                 {pushPermission === 'granted'
                   ? 'Push alerts enabled on this device'
@@ -75,24 +75,24 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
               <button
                 type="button"
                 onClick={() => void onEnablePush()}
-                className="min-h-[36px] px-3 py-1.5 rounded-md bg-[#0F172A] text-white text-xs font-semibold hover:bg-slate-800 whitespace-nowrap shrink-0"
+                className="min-h-[36px] px-3 py-1.5 rounded-md bg-[#0F172A] dark:bg-slate-100 text-white dark:text-slate-950 text-xs font-semibold hover:bg-slate-800 dark:hover:bg-white whitespace-nowrap shrink-0"
               >
                 Enable Push
               </button>
             )}
           </div>
           {pushStatusMessage && (
-            <p className="mt-2 text-xs text-[#2E7D32] font-medium">{pushStatusMessage}</p>
+            <p className="mt-2 text-xs text-[#2E7D32] dark:text-[#66BB6A] font-medium">{pushStatusMessage}</p>
           )}
         </div>
 
         {/* Notification List */}
-        <div className="flex-1 overflow-y-auto divide-y divide-slate-200">
+        <div className="flex-1 overflow-y-auto divide-y divide-slate-200 dark:divide-slate-800">
           {notifications.length === 0 ? (
             <div className="p-8 text-center">
-              <Bell className="w-8 h-8 text-slate-300 mx-auto mb-3" aria-hidden="true" />
-              <p className="text-sm font-semibold text-slate-700">No mission alerts yet</p>
-              <p className="mt-1 text-xs text-slate-500">
+              <Bell className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-3" aria-hidden="true" />
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No mission alerts yet</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 Elevated ORM submissions (score &ge; 6) and command sign-off decisions will appear
                 here immediately.
               </p>
@@ -103,11 +103,15 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
               return (
                 <div
                   key={notif.id}
-                  className={`p-4 transition-colors ${isRead ? 'bg-white' : 'bg-amber-50/40'}`}
+                  className={`p-4 transition-colors ${
+                    isRead
+                      ? 'bg-white dark:bg-slate-900'
+                      : 'bg-amber-50/40 dark:bg-amber-950/25'
+                  }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <RiskTierBadge level={notif.riskLevel} score={notif.score} compact />
-                    <span className="font-mono-data text-[11px] text-slate-500 whitespace-nowrap">
+                    <span className="font-mono-data text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
                       {new Date(notif.createdAt).toLocaleTimeString([], {
                         hour: '2-digit',
                         minute: '2-digit',
@@ -115,12 +119,12 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
                     </span>
                   </div>
 
-                  <p className="mt-2 text-sm font-semibold text-slate-900">{notif.title}</p>
-                  <p className="mt-1 text-xs text-slate-600 leading-relaxed">{notif.body}</p>
+                  <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">{notif.title}</p>
+                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{notif.body}</p>
 
                   {notif.topRiskDrivers.length > 0 && (
-                    <div className="mt-2 text-xs text-slate-500">
-                      <span className="font-semibold text-slate-700">Drivers: </span>
+                    <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">Drivers: </span>
                       {notif.topRiskDrivers.join(' · ')}
                     </div>
                   )}
@@ -133,7 +137,7 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
                         onSelectOrm(notif.ormId);
                         onClose();
                       }}
-                      className="min-h-[36px] px-3 py-1.5 rounded-md bg-[#0F172A] text-white text-xs font-semibold hover:bg-slate-800 transition-colors"
+                      className="min-h-[36px] px-3 py-1.5 rounded-md bg-[#0F172A] dark:bg-slate-100 text-white dark:text-slate-950 text-xs font-semibold hover:bg-slate-800 dark:hover:bg-white transition-colors"
                     >
                       Open Mission ORM
                     </button>
@@ -142,7 +146,7 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
                       <button
                         type="button"
                         onClick={() => void onMarkRead(notif)}
-                        className="min-h-[36px] inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-slate-300 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                        className="min-h-[36px] inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                       >
                         <Check className="w-3.5 h-3.5" aria-hidden="true" />
                         <span>Mark Read</span>
